@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Phân Tích Tài/Xỉu</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .branding {
+      width: 100%;
+      text-align: center;
+      padding: 15px 10px;
+      background: linear-gradient(to right, #00ff88, #006644);
+      color: #000;
+      font-weight: bold;
+      font-size: 20px;
+      box-shadow: 0 4px 10px rgba(0,255,136,0.5);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 600px;
+      background: #111;
+      padding: 20px;
+      margin: 30px auto;
+      border-radius: 15px;
+      box-shadow: 0 0 20px #00ff88;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h2 {
+      color: #00ff88;
+      margin-top: 0;
+    }
+
+    textarea, input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      background: #222;
+      color: #fff;
+      border: 2px solid #00ff88;
+      border-radius: 10px;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(to right, #00ff88, #006644);
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 0 10px #00ff88;
+      transition: transform 0.2s ease;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+    }
+
+    .result, .goiy {
+      margin-top: 20px;
+      padding: 15px;
+      background: #1c1c1c;
+      border-left: 4px solid #00ff88;
+      border-radius: 10px;
+      font-size: 16px;
+      white-space: pre-line;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="branding">@KanHaoDATA – Tools VIP</div>
+
+  <div class="container">
+    <h2>Chuỗi cầu Tài/Xỉu</h2>
+    <textarea id="cauTX" rows="4" placeholder="Ví dụ: T,X,T,X,X,T,..."></textarea>
+
+    <h2>Chọn mẫu dữ liệu .txt (bắt buộc đọc hết mẫu)</h2>
+    <input type="file" id="fileInput" accept=".txt" onchange="docFileMau(event)"/>
+
+    <button onclick="phanTichCau()">Phân tích & Dự đoán</button>
+
+    <div class="result" id="ketQuaTongHop"></div>
+    <div class="goiy" id="goiyDuDoan" style="display:none;"></div>
+  </div>
+
+  <script>
+    let duLieuMau = {};
+
+    function docFileMau(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const lines = e.target.result.split(/\r?\n/);
+        let count = 0;
+        const dataMau = {};
+
+        for (let line of lines) {
+          const parts = line.trim().split("->");
+          if (parts.length === 2) {
+            const key = parts[0].trim().toUpperCase().replace(/\s+/g, "");
+            const value = parts[1].trim().toUpperCase();
+            if ((value === "TÀI" || value === "XỈU") && key.split(",").length === 6) {
+              dataMau[key] = value;
+              count++;
+            }
+          }
+        }
+
+        duLieuMau = dataMau;
+        alert(`Tổng mẫu đã nhập thành công: ${count}`);
+      };
+      reader.readAsText(file);
+    }
+
+    function phanTichCau() {
+      const input = document.getElementById("cauTX").value.trim().toUpperCase();
+      const cau = input.split(",").map(x => x.trim()).filter(x => x === "T" || x === "X");
+      let result = "";
+      let duDoan = "";
+
+      document.getElementById("goiyDuDoan").style.display = "none";
+
+      if (Object.keys(duLieuMau).length === 0) {
+        result = "Vui lòng chọn file mẫu trước khi phân tích.";
+      } else if (cau.length < 6) {
+        result = "Vui lòng nhập ít nhất 6 ký tự T/X.";
+      } else {
+        const key = cau.slice(-6).join(",");
+        if (key in duLieuMau) {
+          duDoan = duLieuMau[key];
+          result = `Chuỗi vừa nhập: ${cau.join(", ")}\nKhớp mẫu: ${key}\n=> Kết quả dự đoán: ${duDoan}`;
+          document.getElementById("goiyDuDoan").innerText = `Dự đoán: ${duDoan}`;
+          document.getElementById("goiyDuDoan").style.display = "block";
+        } else {
+          result = `Chuỗi vừa nhập: ${cau.join(", ")}\n=> Không tìm thấy mẫu khớp trong dữ liệu.`;
+        }
+      }
+
+      document.getElementById("ketQuaTongHop").innerText = result;
+    }
+  </script>
+
+</body>
+</html>
